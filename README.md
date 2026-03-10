@@ -1,6 +1,6 @@
 # Multi-Agent Research Assistant
 
-**Version 1.0 | March 2025**
+**Version 1.1 | March 2026**
 
 An AI-powered research assistant where multiple specialized agents work together to answer complex questions using LangGraph.
 
@@ -120,7 +120,11 @@ research-assistant/
 │       ├── config.py
 │       └── cost_tracker.py
 ├── tests/                # Unit tests
+│   ├── test_agents.py
+│   ├── test_tools.py
+│   └── test_workflow.py
 ├── requirements.txt
+├── .env.example
 └── README.md
 ```
 
