@@ -163,26 +163,6 @@ async def run_research_task(research_id: str, question: str, use_wikipedia: bool
         )
 
 
-@app.get("/research/{research_id}", response_model=ResearchResult)
-async def get_research(research_id: str):
-    """Get results of a completed research query."""
-    result = await storage.get_research(research_id)
-    
-    if not result:
-        raise HTTPException(status_code=404, detail="Research not found")
-    
-    return ResearchResult(
-        id=result["id"],
-        query=result["query"],
-        final_answer=result["final_answer"],
-        sources=eval(result["sources"]) if isinstance(result["sources"], str) else result["sources"],
-        cost=result["cost"],
-        duration_seconds=result["duration_seconds"],
-        status=result["status"],
-        created_at=result["created_at"]
-    )
-
-
 @app.get("/research/history", response_model=List[ResearchResult])
 async def get_research_history(limit: int = 20, offset: int = 0):
     """List past research queries."""
@@ -201,6 +181,26 @@ async def get_research_history(limit: int = 20, offset: int = 0):
         )
         for r in results
     ]
+
+
+@app.get("/research/{research_id}", response_model=ResearchResult)
+async def get_research(research_id: str):
+    """Get results of a completed research query."""
+    result = await storage.get_research(research_id)
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="Research not found")
+    
+    return ResearchResult(
+        id=result["id"],
+        query=result["query"],
+        final_answer=result["final_answer"],
+        sources=eval(result["sources"]) if isinstance(result["sources"], str) else result["sources"],
+        cost=result["cost"],
+        duration_seconds=result["duration_seconds"],
+        status=result["status"],
+        created_at=result["created_at"]
+    )
 
 
 @app.get("/")
