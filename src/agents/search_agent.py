@@ -2,8 +2,8 @@
 
 from typing import Dict, Any, Optional
 from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.tools.web_search import web_search_tool
 from src.tools.wikipedia import wikipedia_tool

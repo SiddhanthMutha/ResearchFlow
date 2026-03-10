@@ -40,6 +40,7 @@ class Storage:
 
     async def save_research(
         self,
+        research_id: str,
         query: str,
         clarified_query: str,
         final_answer: str,
@@ -50,8 +51,6 @@ class Storage:
     ) -> str:
         """Save a research result to the database."""
         await self.initialize()
-
-        research_id = str(uuid.uuid4())
 
         async with aiosqlite.connect(self.db_path) as db:
             await db.execute(

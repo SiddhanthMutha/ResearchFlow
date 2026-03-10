@@ -2,7 +2,7 @@
 
 from typing import Dict, Any, List
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage
+from langchain_core.messages import HumanMessage
 
 from src.tools.web_fetch import web_fetch_tool
 from src.utils.config import config

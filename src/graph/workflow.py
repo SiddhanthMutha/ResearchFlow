@@ -159,16 +159,22 @@ def run_research(question: str, progress_callback: Optional[Callable] = None) ->
         final_state = state
         
         # Call progress callback if provided
-        if progress_callback and "__root__" in state:
-            state_data = state["__root__"]
-            progress_callback({
-                "agent": state_data.get("current_agent", ""),
-                "status": state_data.get("status", ""),
-                "progress": state_data.get("progress", 0),
-                "message": f"Completed {state_data.get('current_agent', '')} step"
-            })
+        if progress_callback:
+            for node_name, node_state in state.items():
+                if isinstance(node_state, dict):
+                    progress_callback({
+                        "agent": node_state.get("current_agent", node_name),
+                        "status": node_state.get("status", ""),
+                        "progress": node_state.get("progress", 0),
+                        "message": f"Completed {node_state.get('current_agent', node_name)} step"
+                    })
     
-    return final_state["__root__"] if final_state else initial_state
+    # Get the final state from the last node
+    if final_state:
+        # Get the last node's state
+        last_node_state = list(final_state.values())[0] if final_state else {}
+        return last_node_state if isinstance(last_node_state, dict) else initial_state
+    return initial_state
 
 
 # Create a singleton instance

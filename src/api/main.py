@@ -135,6 +135,7 @@ async def run_research_task(research_id: str, question: str, use_wikipedia: bool
         
         # Save to database
         await storage.save_research(
+            research_id=research_id,
             query=question,
             clarified_query=result.get("clarified_question", question),
             final_answer=result.get("final_answer", ""),
@@ -151,6 +152,10 @@ async def run_research_task(research_id: str, question: str, use_wikipedia: bool
         )
         
     except Exception as e:
+        # Print error for debugging
+        import traceback
+        print(f"[ERROR] Research task failed: {e}")
+        traceback.print_exc()
         # Send error message
         await ws_manager.send_error(
             research_id,
