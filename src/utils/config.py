@@ -1,4 +1,4 @@
-"""Configuration management for the Multi-Agent Research Assistant."""
+"""Configuration management for ResearchFlow."""
 
 import os
 from typing import Optional

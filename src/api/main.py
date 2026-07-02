@@ -1,20 +1,23 @@
-"""FastAPI server for the Multi-Agent Research Assistant."""
+"""FastAPI server for ResearchFlow."""
 
+import asyncio
 import uuid
 import time
-from datetime import datetime
-from typing import Optional, List, Dict, Any
+from pathlib import Path
+from typing import List, Dict
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from src.graph.workflow import run_research
 from src.memory.storage import storage
 from src.api.websocket import ws_manager
 from src.utils.config import config
-from src.utils.cost_tracker import cost_tracker, estimate_tokens
+from src.utils.cost_tracker import cost_tracker
 
 
 # Request/Response models
@@ -52,11 +55,16 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app
 app = FastAPI(
-    title="Multi-Agent Research Assistant",
-    description="AI-powered research assistant with multiple specialized agents",
+    title="ResearchFlow",
+    description="AI-powered multi-agent research workflow built with LangGraph",
     version="1.0.0",
     lifespan=lifespan
 )
+
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Add CORS middleware
 app.add_middleware(
@@ -120,17 +128,29 @@ async def run_research_task(research_id: str, question: str, use_wikipedia: bool
             0.0
         )
         
+        loop = asyncio.get_running_loop()
+
+        def handle_progress(update: Dict[str, object]) -> None:
+            loop.create_task(
+                ws_manager.send_progress(
+                    research_id,
+                    str(update.get("agent", "ResearchAgent")),
+                    str(update.get("status", "running")),
+                    str(update.get("message", "Research step completed")),
+                    float(update.get("progress", 0.0)),
+                )
+            )
+
         # Run the research
-        result = run_research(question)
+        result = run_research(
+            question,
+            use_wikipedia=use_wikipedia,
+            progress_callback=handle_progress
+        )
         
         # Calculate duration
         duration = time.time() - start_time
         
-        # Estimate cost
-        estimated_tokens = (
-            estimate_tokens(question) +
-            estimate_tokens(result.get("final_answer", ""))
-        )
         estimated_cost = cost_tracker.get_total_cost()
         
         # Save to database
@@ -203,11 +223,17 @@ async def get_research(research_id: str):
     )
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def root():
-    """Root endpoint."""
+    """Serve the frontend."""
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/api")
+async def api_root():
+    """Root API endpoint."""
     return {
-        "name": "Multi-Agent Research Assistant",
+        "name": "ResearchFlow",
         "version": "1.0.0",
         "status": "running"
     }

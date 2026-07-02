@@ -1,200 +1,168 @@
-# Multi-Agent Research Assistant
+# ResearchFlow
 
-**Version 1.1**
+ResearchFlow is a small but real LangGraph research system: one agent clarifies the question, one searches, one reads sources, and one writes the final answer. I also added a frontend so the whole flow is easier to understand, demo, and show off.
 
-An AI-powered research assistant where multiple specialized agents work together to answer complex questions using LangGraph.
+![Frontend screenshot](docs/frontend-screenshot.png)
 
-## Features
+## What You Built
 
-- **Multi-Agent System**: Four specialized agents work together
-  - **Coordinator Agent**: Receives user question, breaks it into subtasks
-  - **Search Agent**: Searches the web using Tavily API
-  - **Reader Agent**: Fetches content from URLs and summarizes
-  - **Writer Agent**: Combines all information into a coherent answer
+ResearchFlow is not just "LLM in, answer out."
 
-- **Real-Time Progress**: WebSocket updates as agents work
-- **Cost Tracking**: Track token usage and costs
-- **Research History**: SQLite database for storing past research
+It shows the full research loop:
 
-## Prerequisites
+- A **Coordinator Agent** turns a raw prompt into a cleaner research task.
+- A **Search Agent** finds relevant web results and optional Wikipedia context.
+- A **Reader Agent** fetches the best pages and extracts the useful signal.
+- A **Writer Agent** synthesizes everything into one final answer with sources.
+- A **FastAPI backend** exposes the workflow through HTTP and WebSockets.
+- A **minimal frontend** now lets you watch the LangGraph run live.
+- A **SQLite history layer** keeps past research runs around for review.
 
-- Python 3.9+
-- OpenAI API key
-- Tavily API key (for web search)
+## Why It Feels Better Than Most LangGraph Demos
 
-## Installation
+A lot of LangGraph examples stop at a notebook, a CLI printout, or a single graph image. This project goes further in a way that is actually useful when you want to demo or build on top of it:
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd research-assistant
-```
+- It has a **real user interface**, not just backend logic.
+- It shows **live progress** while each agent works.
+- It keeps **research history**, so runs do not disappear after one request.
+- It combines **multiple source-gathering strategies** instead of relying on one prompt.
+- It is structured in a way that is easy to extend with more agents, better routing, or richer memory later.
 
-2. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+So the strength here is not that it claims to be the biggest LangGraph system. The strength is that ResearchFlow is already a clean end-to-end product surface: orchestrated agents, API, persistence, and a frontend that makes the orchestration visible.
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+## Frontend Highlights
 
-4. Copy `.env.example` to `.env` and add your API keys:
-```bash
-cp .env.example .env
-```
+The new frontend is designed to be minimal, warm, and demo-friendly:
 
-Edit `.env` with your keys:
-```
-OPENAI_API_KEY=your_openai_api_key
-TAVILY_API_KEY=your_tavily_api_key
-```
+- A focused landing area that explains the multi-agent story quickly
+- A research composer with sample prompts
+- Live agent-status cards driven by WebSocket updates
+- A final answer panel for the synthesized result
+- A source list for traceability
+- A recent-history section so previous runs stay visible
+- Product naming and demo framing built around `ResearchFlow`
 
-## Running the Server
+## Architecture
 
-Start the FastAPI server:
-```bash
-python -m uvicorn src.api.main:app --reload
-```
-
-The API will be available at `http://localhost:8000`
-
-## API Endpoints
-
-### Start a Research Query
-```bash
-POST /research
-{
-  "question": "What are the latest developments in quantum computing?"
-}
-```
-
-Response:
-```json
-{
-  "id": "uuid-of-research",
-  "status": "started",
-  "message": "Research task started..."
-}
-```
-
-### Get Research Results
-```bash
-GET /research/{research_id}
-```
-
-### Get Research History
-```bash
-GET /research/history?limit=20&offset=0
-```
-
-### WebSocket for Real-Time Updates
-```bash
-ws://localhost:8000/ws/{research_id}
+```text
+User
+  -> Frontend
+  -> FastAPI API
+  -> LangGraph Workflow
+     -> Coordinator
+     -> Search
+     -> Reader
+     -> Writer
+  -> SQLite history
 ```
 
 ## Project Structure
 
-```
-research-assistant/
-├── src/
-│   ├── agents/           # Agent implementations
-│   │   ├── coordinator.py
-│   │   ├── search_agent.py
-│   │   ├── reader_agent.py
-│   │   └── writer_agent.py
-│   ├── tools/            # Tool implementations
-│   │   ├── web_search.py
-│   │   ├── web_fetch.py
-│   │   └── wikipedia.py
-│   ├── graph/            # LangGraph workflow
-│   │   └── workflow.py
-│   ├── api/              # FastAPI server
-│   │   ├── main.py
-│   │   └── websocket.py
-│   ├── memory/           # SQLite storage
-│   │   └── storage.py
-│   └── utils/            # Utilities
-│       ├── config.py
-│       └── cost_tracker.py
-├── tests/                # Unit tests
-│   ├── test_agents.py
-│   ├── test_tools.py
-│   └── test_workflow.py
-├── requirements.txt
-├── .env.example
-└── README.md
+```text
+src/
+  agents/      Agent implementations
+  api/         FastAPI server, WebSocket manager, and static frontend
+  graph/       LangGraph workflow
+  memory/      SQLite storage
+  tools/       Web search, fetch, and Wikipedia helpers
+  utils/       Config and cost tracking
+tests/         Basic test coverage
+docs/          README assets such as the frontend screenshot
 ```
 
-## Testing
+## Run It Locally
 
-Run tests:
+### 1. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Create your environment file
+
+```bash
+cp .env.example .env
+```
+
+Add your keys:
+
+```env
+OPENAI_API_KEY=your_openai_api_key
+TAVILY_API_KEY=your_tavily_api_key
+```
+
+### 3. Start the app
+
+```bash
+python -m uvicorn src.api.main:app --reload
+```
+
+Open:
+
+- Frontend: `http://localhost:8000/`
+- API root: `http://localhost:8000/api`
+- Health check: `http://localhost:8000/health`
+
+## API Endpoints
+
+### Start research
+
+```http
+POST /research
+Content-Type: application/json
+```
+
+```json
+{
+  "question": "What are the latest developments in quantum computing?",
+  "use_wikipedia": true
+}
+```
+
+### Fetch one result
+
+```http
+GET /research/{research_id}
+```
+
+### Fetch history
+
+```http
+GET /research/history?limit=20&offset=0
+```
+
+### Watch live progress
+
+```text
+ws://localhost:8000/ws/{research_id}
+```
+
+## What Changed In This Version
+
+- Added a polished static frontend served directly from FastAPI
+- Connected the UI to the research API and research history
+- Wired WebSocket progress into the actual LangGraph execution flow
+- Added a real frontend screenshot to the README
+- Rewrote the README to explain the project in a more human, showcase-friendly way
+
+## Tests
+
+Run the tests with:
+
 ```bash
 pytest tests/
 ```
 
-## Example Usage
+## Where To Take It Next
 
-### Using cURL
+If you want to push this further, the next strong upgrades would be:
 
-```bash
-# Start research
-curl -X POST http://localhost:8000/research \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What is quantum computing?"}'
-
-# Get results (after completion)
-curl http://localhost:8000/research/{research_id}
-```
-
-### Using Python
-
-```python
-import requests
-
-# Start research
-response = requests.post(
-    "http://localhost:8000/research",
-    json={"question": "What is quantum computing?"}
-)
-research_id = response.json()["id"]
-
-# Get results
-response = requests.get(f"http://localhost:8000/research/{research_id}")
-print(response.json()["final_answer"])
-```
-
-## Architecture
-
-```
-User → FastAPI → Coordinator → Search → Reader → Writer → User
-         ↓
-      WebSocket (progress updates)
-         ↓
-       SQLite (history)
-```
-
-## Cost Tracking
-
-The system tracks token usage for each agent and calculates costs based on OpenAI's pricing:
-
-- GPT-4 Input: $0.01 per 1K tokens
-- GPT-4 Output: $0.03 per 1K tokens
-
-## Development
-
-### Running in Development Mode
-
-```bash
-# With auto-reload
-python -m uvicorn src.api.main:app --reload --reload-dir src
-
-# With debug mode
-python -m uvicorn src.api.main:app --reload --log-level debug
-```
+- dynamic routing instead of a fixed linear flow
+- deeper source validation and ranking
+- richer citations in the final answer
+- user accounts or saved workspaces
+- agent traces and observability for each run
 
 ## License
 
-MIT License
+MIT

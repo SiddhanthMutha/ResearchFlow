@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResearchFlow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">ResearchFlow</p>
+        <h1>Move from question to grounded answer in one clean flow.</h1>
+        <p class="hero-text">
+          ResearchFlow lets you watch the coordinator plan, the search agent gather signal,
+          the reader condense sources, and the writer turn everything into a clean answer with citations.
+        </p>
+        <div class="hero-pills">
+          <span>4-agent pipeline</span>
+          <span>Live WebSocket progress</span>
+          <span>Stored research history</span>
+        </div>
+      </div>
+      <aside class="hero-panel">
+        <div class="panel-kicker">Flow</div>
+        <ol class="agent-flow">
+          <li>Coordinator clarifies the question</li>
+          <li>Search agent finds web and Wikipedia sources</li>
+          <li>Reader agent extracts the useful parts</li>
+          <li>Writer agent synthesizes the final answer</li>
+        </ol>
+      </aside>
+    </header>
+
+    <main class="grid">
+      <section class="card composer-card">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">Try it</p>
+            <h2>Ask a research question</h2>
+          </div>
+          <label class="wiki-toggle">
+            <input type="checkbox" id="wikiToggle" checked>
+            <span>Use Wikipedia</span>
+          </label>
+        </div>
+
+        <form id="researchForm" class="composer">
+          <textarea id="questionInput" rows="5" placeholder="Compare the latest trends in quantum computing and where the biggest commercial opportunities are."></textarea>
+          <div class="composer-actions">
+            <div class="sample-prompts" id="samplePrompts">
+              <button type="button" data-prompt="What are the latest developments in quantum computing?">Quantum computing</button>
+              <button type="button" data-prompt="How is AI changing software engineering workflows in 2026?">AI engineering</button>
+              <button type="button" data-prompt="Compare EV battery technologies and their tradeoffs.">EV batteries</button>
+            </div>
+            <button id="submitButton" class="primary-button" type="submit">Start research</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card status-card">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">Live run</p>
+            <h2>Agent activity</h2>
+          </div>
+          <div class="run-meta" id="runMeta">Idle</div>
+        </div>
+
+        <div class="progress-strip">
+          <div id="progressBar"></div>
+        </div>
+
+        <div class="agent-grid" id="agentGrid">
+          <article class="agent-tile" data-agent="CoordinatorAgent">
+            <span class="agent-name">Coordinator</span>
+            <strong>Waiting</strong>
+            <p>Clarifies the question and frames the run.</p>
+          </article>
+          <article class="agent-tile" data-agent="SearchAgent">
+            <span class="agent-name">Search</span>
+            <strong>Waiting</strong>
+            <p>Finds web sources and optional Wikipedia context.</p>
+          </article>
+          <article class="agent-tile" data-agent="ReaderAgent">
+            <span class="agent-name">Reader</span>
+            <strong>Waiting</strong>
+            <p>Fetches the top links and extracts the signal.</p>
+          </article>
+          <article class="agent-tile" data-agent="WriterAgent">
+            <span class="agent-name">Writer</span>
+            <strong>Waiting</strong>
+            <p>Builds the final answer with supporting sources.</p>
+          </article>
+        </div>
+
+        <div class="log-panel" id="logPanel">
+          <p class="empty-note">Start a run to watch each LangGraph step update in real time.</p>
+        </div>
+      </section>
+
+      <section class="card result-card">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">Output</p>
+            <h2>Final answer</h2>
+          </div>
+        </div>
+        <div id="answerPanel" class="answer-panel">
+          <p class="empty-note">Your synthesized answer will appear here after the workflow completes.</p>
+        </div>
+        <div id="sourcesPanel" class="sources-panel"></div>
+      </section>
+
+      <section class="card history-card">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">Memory</p>
+            <h2>Recent research</h2>
+          </div>
+        </div>
+        <div id="historyPanel" class="history-panel">
+          <p class="empty-note">Loading recent runs...</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

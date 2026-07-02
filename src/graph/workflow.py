@@ -1,8 +1,7 @@
-"""LangGraph workflow for the multi-agent research assistant."""
+"""LangGraph workflow for ResearchFlow."""
 
 from typing import TypedDict, List, Dict, Any, Optional, Callable
 from langgraph.graph import StateGraph, END
-from langchain_core.messages import HumanMessage, AIMessage
 
 from src.agents.coordinator import coordinator_agent
 from src.agents.search_agent import search_agent
@@ -17,6 +16,7 @@ class ResearchState(TypedDict):
     search_query: str
     search_results: List[Dict[str, Any]]
     wikipedia_results: List[Dict[str, Any]]
+    use_wikipedia: bool
     summaries: List[Dict[str, Any]]
     final_answer: str
     sources: List[Dict[str, str]]
@@ -71,11 +71,11 @@ def search_node(state: ResearchState) -> ResearchState:
     """Search node - searches for relevant information."""
     question = state.get("clarified_question", state["question"])
     
-    result = search_agent.run(question)
+    result = search_agent.run(question, state.get("use_wikipedia", True))
     
     return {
         **state,
-        "search_query": result.get("search_query", ""),
+        "search_query": result.get("query", ""),
         "search_results": result.get("search_results", []),
         "wikipedia_results": result.get("wikipedia_results", []),
         "progress": 0.4,
@@ -122,12 +122,17 @@ def writer_node(state: ResearchState) -> ResearchState:
     }
 
 
-def run_research(question: str, progress_callback: Optional[Callable] = None) -> ResearchState:
+def run_research(
+    question: str,
+    use_wikipedia: bool = True,
+    progress_callback: Optional[Callable] = None
+) -> ResearchState:
     """
     Run the research workflow.
     
     Args:
         question: User's research question
+        use_wikipedia: Whether to include Wikipedia lookups during search
         progress_callback: Optional callback for progress updates
         
     Returns:
@@ -140,6 +145,7 @@ def run_research(question: str, progress_callback: Optional[Callable] = None) ->
         "search_query": "",
         "search_results": [],
         "wikipedia_results": [],
+        "use_wikipedia": use_wikipedia,
         "summaries": [],
         "final_answer": "",
         "sources": [],
